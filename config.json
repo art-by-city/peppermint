@@ -1,15 +1,20 @@
 {
 	"batchSize": 110,
 	"confirmations": 1,
-	"nftContract": "KT1Ag9fR8mUxYHxx3pWNwvbpFyugFq7fKfQ9",
-	"privateKey": "edsk4LzAuuQF1FkFHV5qXmpL8a5YNtJh1pTtkAYjAVBKCSAbp6LCCD",
-	"rpcUrl": "http://immensely.newby.org:8734/",
+	"nftContract": "KT1Vd4dMhPFPJFHCBenE9A3x11azztYwYoyn",
+	"privateKey": "edsk3QoqBuvdamxouPhin7swCvkQNgq4jP5KZPbwWNnwdZpSpJiEbq",
+	"rpcUrl": "http://localhost:20000",
 	"pollingDelay": 10000,
 	"dbConnection": {
-		"user": "dani",
-        "password": "foobar",
-        "host": "localhost",
-        "port": 5432,
-        "database": "chainop_queue"
+		"user": "peppermint",
+		"password": "foobar",
+		"host": "localhost",
+		"port": 5432,
+		"database": "peppermint"
+	},
+	"arweave": {
+		"protocol": "http",
+		"host": "localhost",
+		"port": 1984
 	}
 }

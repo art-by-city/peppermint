@@ -1,7 +1,4 @@
-import { TezosToolkit } from "@taquito/taquito";
-
 export default async function() {
-
 	return {
 		transfer: async function({ to_address, amount }, batch) {
 			let transfer_arg = {

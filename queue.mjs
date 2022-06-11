@@ -20,25 +20,60 @@ export default function(db_connection) {
 			return result.rows;
 	};
 
-	const save_sent = function(ids, op_hash) {
-			return pool.query(SENT_SQL, [op_hash, ids]);
-	};
+	const save_sent = function (ids, op_hash) {
+		try {
+			return pool.query(SENT_SQL, [op_hash, ids])
+		} catch (err) {
+			console.error(
+				'Database error when writing hash to operations with ids:',
+				ids, '\n', err
+			)
+		}
+	}
 
-	const save_confirmed = function(ids) {
-			return set_state(ids, 'confirmed');
-	};
+	const save_confirmed = function (ids) {
+		try {
+			return set_state(ids, 'confirmed')
+		} catch (err) {
+			console.error(
+				'Database error when saving confirmed status to operations with ids:',
+				ids, '\n', err
+			)
+		}
+	}
 
-	const save_rejected = function(ids) {
-			return set_state(ids, 'rejected');
-	};
+	const save_rejected = function (ids) {
+		try {
+			return set_state(ids, 'rejected')
+		} catch (err) {
+			console.error(
+				'Database error when updating rejected operation with ids:',
+				ids, '\n', err
+			)
+		}
+	}
 
-	const save_failed = function(ids) {
-			return set_state(ids, 'failed');
-	};
+	const save_failed = function (ids) {
+		try {
+			return set_state(ids, 'failed')
+		} catch (err) {
+			console.error(
+				'Database error when saving failed status to operations with ids:',
+				ids, '\n', err
+			)
+		}
+	}
 
-	const save_unknown = function(ids) {
-		return set_state(ids, 'unknown');
-	};
+	const save_unknown = function (ids) {
+		try {
+			return set_state(ids, 'unknown')
+		} catch (err) {
+			console.error(
+				'Database error when updating unknown state operation with ids:',
+				ids, '\n',	err
+			)
+		}
+	}
 
 
 	return {
