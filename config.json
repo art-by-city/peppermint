@@ -1,9 +1,9 @@
 {
 	"batchSize": 110,
 	"confirmations": 1,
-	"nftContract": "KT1Vd4dMhPFPJFHCBenE9A3x11azztYwYoyn",
+	"nftContract": "KT1QuSZ53cWV7pPFbT9MMVD7eigxTyL2eCGP",
 	"privateKey": "edsk3QoqBuvdamxouPhin7swCvkQNgq4jP5KZPbwWNnwdZpSpJiEbq",
-	"rpcUrl": "http://localhost:20000",
+	"rpcUrl": "https://jakartanet.ecadinfra.com",
 	"pollingDelay": 10000,
 	"dbConnection": {
 		"user": "peppermint",

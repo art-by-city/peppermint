@@ -8,10 +8,10 @@ import Queue from './queue.mjs'
 import {
 	ArweaveHandler,
 	NftAssetHandler,
-	NftMultiassetHandler,
+	NftMultiAssetHandler,
 	TezHandler
-} from './operations'
-import { ArweaveDriver, TezosDriver } from './drivers'
+} from './operations/index.mjs'
+import { ArweaveDriver, TezosDriver } from './drivers/index.mjs'
 import {
 	parse_rpc_error,
 	postprocess_error_object
@@ -23,6 +23,7 @@ const config = require('./config.json');
 
 const main = async function() {
 	const queue = Queue(config.dbConnection);
+	await queue.ensure_db()
 	const tezos = new TezosToolkit(config.rpcUrl);
 	const arweave = Arweave.init(config.arweave)
 	const signer = new InMemorySigner(config.privateKey);
@@ -31,16 +32,16 @@ const main = async function() {
 	console.log("Signer initialized for originating address", address);
 	tezos.setSignerProvider(signer);
 
-	const drivers = {
-		arweave: new ArweaveDriver(config, queue, {
-			'arweave': ArweaveHandler(arweave)
-		}),
-		tezos: new TezosDriver(config, queue, {
-			// 'nft': await NftMultiassetHandler(tezos, config.nftContract),
-			'nft-asset': await NftAssetHandler(tezos, config.nftContract),
-			'tez': await TezHandler(tezos),
-		})
-	}
+	// const drivers = {
+	// 	arweave: new ArweaveDriver(config, queue, {
+	// 		'arweave': ArweaveHandler(arweave)
+	// 	}),
+	// 	tezos: new TezosDriver(config, queue, {
+	// 		// 'nft': await NftMultiassetHandler(tezos, config.nftContract),
+	// 		'nft-asset': await NftAssetHandler(tezos, config.nftContract),
+	// 		'tez': await TezHandler(tezos),
+	// 	})
+	// }
 
 	const handlers = {
 		// 'nft': await NftMultiassetHandler(tezos, config.nftContract),
@@ -65,7 +66,7 @@ const main = async function() {
 		}
 	}
 
-	const heartbeat = async function() {
+	const heartbeat = async function () {
 		let ops = await queue.checkout(address, config.batchSize);
 		if (ops.length == 0) {
 			console.log("No pending operations for originator", address);
@@ -74,18 +75,33 @@ const main = async function() {
 		}
 		console.log("Generating batch with", ops.length, "operations.")
 
+		// const rejectedIds = []
+		// const batchedIds = []
+		// ops.forEach(op => {
+		// 	for (const driverName in drivers) {
+		// 		const driver = drivers[driverName]
+		// 		const valid = Object.keys(driver.handlers).includes(op.command.handler)
+		// 			&& driver.handlers[op.command.handler](op.command.args, BATCH)
 
-		// TODO -> async parallel & reflect
-		for (const driverName in drivers) {
-			const driver = drivers[driverName]
-			const driverOps = ops.filter(
-				op => Object.keys(driver.handlers).includes(op.command.handler)
-			)
+		// 		if (!valid) {
 
-			return await driver.batch(driverOps).run(batch, batchedIds)
-		}
+		// 		} else {
+		// 			rejectedIds.push(op)
+		// 		}
+
+		// 		// return await driver.batch(driverOps).run()
+		// 	}
+		// })
+
+		// const validateOpsWithDrivers = Object.values(drivers).map(driver => {
+		// 	const driverOps = ops.filter(
+		// 		op => Object.keys(driver.handlers).includes(op.command.handler)
+		// 	)
+		// })
 
 
+
+		// OLD CODE BELOW
 
 		// Setup
 		const dispatch_command = function(

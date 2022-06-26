@@ -2,10 +2,15 @@ import { createRequire } from 'module'
 import { TezosToolkit, MichelsonMap } from '@taquito/taquito'
 import { InMemorySigner } from '@taquito/signer'
 import fs from 'fs'
+import { char2Bytes, getPkhfromPk } from '@taquito/utils'
 
 const require = createRequire(import.meta.url)
 require('console-stamp')(console)
 const config = require('./config.json')
+
+const creatorPK = process.env.CREATOR_PK
+  || 'edpkvGfYw3LyB1UcCahKQk4rF2tvbMUk8GFiTuMjL75uGXrpvKXhjn'
+const creatorPKH = getPkhfromPk(creatorPK)
 
 const main = async function() {
   const tezos = new TezosToolkit(config.rpcUrl)
@@ -18,6 +23,17 @@ const main = async function() {
     '../smart-contracts/nft_assets/ligo/out/fa2_nft_asset.tz'
   ).toString()
 
+
+  const metadata = new MichelsonMap()
+  metadata.set('', char2Bytes('tezos-storage:content'))
+  metadata.set('content', char2Bytes(JSON.stringify({
+    name: 'Interactive NFT Test',
+    description: 'This is an interactive NFT test contract!',
+    version: '1',
+    license: 'MIT',
+    interfaces: [ 'TZIP-012' ]
+  })))
+
   tezos.contract.originate({
     code,
     storage: {
@@ -29,7 +45,7 @@ const main = async function() {
         };
       */
       admin: {
-        admin: 'tz1VSUr8wwNhLAzempoch5d6hLRiTh8Cjcjb',
+        admin: creatorPKH,
         // pending_admin: '',
         paused: false
       },
@@ -60,21 +76,19 @@ const main = async function() {
           ("content", 0x00) (* bytes encoded UTF-8 JSON *)
         ];
       */
-      metadata: new MichelsonMap()
+      metadata
     }
   })
   .then((op) => {
-    console.log(`Confirming origination for ${op.contractAddress}...`)
+    console.log(`Confirming origination for contract ${op.contractAddress}`)
 
-    return op.contract()
+    return op.confirmation(config.confirmations)
   })
-  .then((contract) => {
-    console.log(`Successfuly deployed contract ${contract.address}!`)
-
-    return contract.address
+  .then(confirms => {
+    console.log(`deployed with ${confirms} confirms`)
   })
   .catch((err) => {
-    console.error('An error has ocurred deploying contract!\n', err)
+    console.error('An error has occurred deploying contract!\n', err)
   })
 }
 

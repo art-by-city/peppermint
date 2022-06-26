@@ -14,10 +14,10 @@ const ERRORS = {
 }
 
 export default class TezosDriver {
-  private config = {}
-  private batch = null
-  private ids = []
-  private queue = null
+  config = {}
+  batch = null
+  ids = []
+  queue = null
   handlers = []
 
   constructor(config, queue, handlers) {
@@ -38,6 +38,7 @@ export default class TezosDriver {
       if (valid) {
         this.ids.push(op.id)
       } else {
+				console.warn('Invalid command', command)
         rejectedIds.push(op.id)
       }
     })
@@ -58,18 +59,18 @@ export default class TezosDriver {
 
 		while (true) {
 			try {
-				const batchOp = await this.batch.send()
+				const walletBatch = await this.batch.send()
         console.log(
-					'Sent operation group with hash:', batchOp.opHash,
+					'Sent operation group with hash:', walletBatch.opHash,
 					'containing operations with ids:', this.ids
 				)
-				this.queue.save_sent(this.ids, batchOp.opHash)
+				this.queue.save_sent(this.ids, walletBatch.opHash)
 
-				const result = await batchOp.confirmation(this.config.confirmations)
+				const result = await walletBatch.confirmation(this.config.confirmations)
 
 				if (result.completed) {
 					console.log(
-						`Operation group with hash ${batchOp.opHash} has been confirmed.`
+						`Operation group with hash ${walletBatch.opHash} has been confirmed.`
 					)
 					this.queue.save_confirmed(this.ids)
 
@@ -81,7 +82,7 @@ export default class TezosDriver {
            *   underdocumented results.
            *   It should be possible to prepare for chain reorgs based on it
            */
-					console.log(`Operation group with hash ${batchOp.opHash} has failed.`)
+					console.log(`Operation group with hash ${walletBatch.opHash} has failed.`)
 					this.queue.save_failed(this.ids)
 				}
 			} catch (err) {

@@ -1,3 +1,6 @@
+import {MichelsonMap} from '@taquito/taquito'
+import {char2Bytes} from '@taquito/tzip16'
+
 export default async function (tezos, contractAddress) {
   const contract = await tezos.contract.at(contractAddress)
   console.log(
@@ -28,12 +31,35 @@ export default async function (tezos, contractAddress) {
   })
 
   return {
-    mint: function ({ token_id, to_address, amount = 1 }, batch) {
-      batch.withContractCall(ops.mint_tokens([{
-        owner: to_address,
+  //   const uri = 'ipfs://QmPxz1s3wYVGibvLpgcqFMrvtnhVmNU5Y7xo9qLGLAGeHx'
+  //   const token_id = 1
+  //   const from_ = token_id
+  //   const to_ = token_id + 1
+  //   const token_info = MichelsonMap.fromLiteral({ '': char2Bytes(uri) })
+  //   const owners = ['tz1VSUr8wwNhLAzempoch5d6hLRiTh8Cjcjb']
+
+  // mint_tokens(from_, to_, token_id, token_info, owners)
+    mint_tokens: function ({ token_id, metadata_uri, owners }, batch) {
+      console.log('nft-asset.mint_tokens()', token_id, metadata_uri, owners)
+      const from_ = token_id
+      const to_ = token_id + 1
+      const token_info = MichelsonMap.fromLiteral({
+        '': char2Bytes(metadata_uri)
+      })
+      const args = {
+        from_,
+        to_,
         token_id,
-        amount
-      }]))
+        token_info,
+        owners
+      }
+
+      console.log('nft-asset.mint_tokens() args', args)
+
+      // batch.withContractCall(ops.mint_tokens(args))
+      batch.withContractCall(contract.methods.mint_tokens(
+        from_, to_, token_id, token_info, owners
+      ))
 
       return true
     }
