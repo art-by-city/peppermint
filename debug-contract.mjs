@@ -9,65 +9,70 @@ const require = createRequire(import.meta.url)
 require('console-stamp')(console)
 const config = require('./config.json')
 
+const creatorPrivateKey = process.env.CREATOR_PRIVATE_KEY
+  || 'edsk3QoqBuvdamxouPhin7swCvkQNgq4jP5KZPbwWNnwdZpSpJiEbq'
+const rpcUrl = process.env.RPC_URL || 'https://jakartanet.ecadinfra.com'
+
 const main = async function() {
-  const tezos = new TezosToolkit(config.rpcUrl)
+  const tezos = new TezosToolkit(rpcUrl)
   tezos.addExtension(new Tzip12Module())
-  const signer = new InMemorySigner(config.privateKey)
+  const signer = new InMemorySigner(creatorPrivateKey)
 	const address = await signer.publicKeyHash()
   const pk = await signer.publicKey()
   console.log('Signer initialized for originating address', address)
   console.log('Signer initialized for originating pk', pk)
   tezos.setSignerProvider(signer)
 
-  const bytes = char2Bytes(JSON.stringify({
-    "handler": "nft-asset",
-    "name": "mint_tokens",
-    "args": {
-      "token_id": 2,
-      "metadata_uri": "ipfs://QmPxz1s3wYVGibvLpgcqFMrvtnhVmNU5Y7xo9qLGLAGeHx",
-      "owners": ["tz1VSUr8wwNhLAzempoch5d6hLRiTh8Cjcjb"]
-    }
-  }))
+  // const bytes = char2Bytes(JSON.stringify({
+  //   "handler": "nft-asset",
+  //   "name": "mint_tokens",
+  //   "args": {
+  //     "token_id": 2,
+  //     "metadata_uri": "ipfs://QmPxz1s3wYVGibvLpgcqFMrvtnhVmNU5Y7xo9qLGLAGeHx",
+  //     "owners": ["tz1VSUr8wwNhLAzempoch5d6hLRiTh8Cjcjb"]
+  //   }
+  // }))
 
-  signer.sign(bytes).then(signature => {
-    console.log('bytes', bytes)
-    console.log('sig', signature.sig)
-    const verified = verifySignature(bytes, pk, signature.sig)
+  // signer.sign(bytes).then(signature => {
+  //   console.log('bytes', bytes)
+  //   console.log('sig', signature.sig)
+  //   const verified = verifySignature(bytes, pk, signature.sig)
 
-    console.log('Message verified?', verified)
-  }).catch(err => console.error('err!', err))
+  //   console.log('Message verified?', verified)
+  // }).catch(err => console.error('err!', err))
 
   const tokenId = 1
 
   tezos.contract
-  .at(config.nftContract)
+  // .at(config.nftContract)
   // .at('KT1HcpvkvqaqzbTfz4mS6Ldwn31vVhzjwf8q') // has contract metadata
-  // .then(contract => {
-  //   // const schema = contract.parameterSchema.ExtractSchema()
-  //   // console.log('CONTRACT PARAMETER SCHEMA\n', JSON.stringify(schema, null, 2))
-  //   // console.log(`Fetching the token metadata for the token ID ${tokenId}...`)
+  .at('KT1E44qQrEEyMmczvqsuFopdrFRKrM2G7eLw')
+  .then(contract => {
+    const schema = contract.parameterSchema.ExtractSchema()
+    console.log('CONTRACT PARAMETER SCHEMA\n', JSON.stringify(schema, null, 2))
+    console.log(`Fetching the token metadata for the token ID ${tokenId}...`)
 
-  //   return contract.storage()
-  // })
-  // .then(storage => {
-  //   console.log('storage', JSON.stringify(storage, null, 2))
+    return contract.storage()
+  })
+  .then(storage => {
+    console.log('storage', JSON.stringify(storage, null, 2))
 
-  //   // return storage.metadata.get('content') // contract metadata
-  //   // return storage.assets.ledger.get(tokenId) // owner of tokenId
-  //   return storage.assets.metadata.metadata.get({ from_: tokenId, to_: tokenId + 1 })
-  // })
-  // .then(metadata => {
-  //   // console.log('metadata', JSON.stringify(bytes2Char(metadata), null, 2))
-  //   // console.log('metadata', bytes2Char(metadata))
-  //   console.log('metadata', metadata)
+    // return storage.metadata.get('content') // contract metadata
+    // return storage.assets.ledger.get(tokenId) // owner of tokenId
+    return storage.assets.metadata.metadata.get({ from_: tokenId, to_: tokenId + 1 })
+  })
+  .then(metadata => {
+    // console.log('metadata', JSON.stringify(bytes2Char(metadata), null, 2))
+    // console.log('metadata', bytes2Char(metadata))
+    console.log('metadata', metadata)
 
-  //   return metadata.token_info.get('')
-  // })
-  // .then(token_info => {
-  //   console.log('token_info', bytes2Char(token_info))
+    return metadata.token_info.get('')
+  })
+  .then(token_info => {
+    console.log('token_info', bytes2Char(token_info))
 
 
-  // })
+  })
 
   // .then(contract => {
   //   const methods = contract.parameterSchema.ExtractSignatures()

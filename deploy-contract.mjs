@@ -11,10 +11,16 @@ const config = require('./config.json')
 const creatorPK = process.env.CREATOR_PK
   || 'edpkvGfYw3LyB1UcCahKQk4rF2tvbMUk8GFiTuMjL75uGXrpvKXhjn'
 const creatorPKH = getPkhfromPk(creatorPK)
+const creatorPrivateKey = process.env.CREATOR_PRIVATE_KEY
+  || 'edsk3QoqBuvdamxouPhin7swCvkQNgq4jP5KZPbwWNnwdZpSpJiEbq'
+const nftName = process.env.NFT_NAME || 'Interactive NFT Test'
+const nftDesc = process.env.NFT_DESC
+  || 'This is an interactive NFT test contract!'
+const rpcUrl = process.env.RPC_URL || 'https://jakartanet.ecadinfra.com'
 
 const main = async function() {
-  const tezos = new TezosToolkit(config.rpcUrl)
-  const signer = new InMemorySigner(config.privateKey)
+  const tezos = new TezosToolkit(rpcUrl)
+  const signer = new InMemorySigner(creatorPrivateKey)
 	const address = await signer.publicKeyHash()
   console.log('Signer initialized for originating address', address)
   tezos.setSignerProvider(signer)
@@ -27,8 +33,8 @@ const main = async function() {
   const metadata = new MichelsonMap()
   metadata.set('', char2Bytes('tezos-storage:content'))
   metadata.set('content', char2Bytes(JSON.stringify({
-    name: 'Interactive NFT Test',
-    description: 'This is an interactive NFT test contract!',
+    name: nftName,
+    description: nftDesc,
     version: '1',
     license: 'MIT',
     interfaces: [ 'TZIP-012' ]
@@ -37,29 +43,10 @@ const main = async function() {
   tezos.contract.originate({
     code,
     storage: {
-      /**
-        admin = {
-          admin = ("tz1YPSCGWXwBdTncK2aCctSZAXWvGsGwVJqU" : address);
-          pending_admin = (None : address option);
-          paused = true;
-        };
-      */
       admin: {
         admin: creatorPKH,
-        // pending_admin: '',
         paused: false
       },
-      /**
-        assets = {
-          ledger = (Big_map.empty : (token_id, address) big_map);
-          operators = (Big_map.empty : operator_storage);
-          metadata = {
-            token_defs = (Set.empty : token_def set);
-            next_token_id = 0n;
-            metadata = (Big_map.empty : (token_def, token_metadata) big_map);
-          };
-        };
-      */
       assets: {
         ledger: new MichelsonMap(),
         operators: new MichelsonMap(),
@@ -69,13 +56,6 @@ const main = async function() {
           metadata: new MichelsonMap()
         }
       },
-      /**
-        metadata = Big_map.literal [
-          ("", Bytes.pack "tezos-storage:content" );
-          (* ("", 0x74657a6f732d73746f726167653a636f6e74656e74); *)
-          ("content", 0x00) (* bytes encoded UTF-8 JSON *)
-        ];
-      */
       metadata
     }
   })

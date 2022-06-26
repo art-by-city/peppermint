@@ -21,16 +21,29 @@ const require = createRequire(import.meta.url);
 require('console-stamp')(console);
 const config = require('./config.json');
 
-const main = async function() {
-	const queue = Queue(config.dbConnection);
-	await queue.ensure_db()
-	const tezos = new TezosToolkit(config.rpcUrl);
-	const arweave = Arweave.init(config.arweave)
-	const signer = new InMemorySigner(config.privateKey);
-	const address = await signer.publicKeyHash();
+const rpcUrl = process.env.RPC_URL || 'https://jakartanet.ecadinfra.com'
+const creatorPrivateKey = process.env.CREATOR_PRIVATE_KEY
+  || 'edsk3QoqBuvdamxouPhin7swCvkQNgq4jP5KZPbwWNnwdZpSpJiEbq'
+const contractId = process.env.CONTRACT_ID
+	|| 'KT1EDZok4ghYGcJMtg7J7Y7Jmw5pD1o8PERf'
+const dbConnection = {
+	user: process.env.POSTGRES_USER || 'peppermint',
+	password: process.env.POSTGRES_PASSWORD || 'foobar',
+	host: 'localhost',
+	port: 5432,
+	database: process.env.POSTGRES_DATABASE || 'peppermint'
+}
 
-	console.log("Signer initialized for originating address", address);
-	tezos.setSignerProvider(signer);
+const main = async function() {
+	const queue = Queue(dbConnection)
+	await queue.ensure_db()
+	const tezos = new TezosToolkit(rpcUrl)
+	const arweave = Arweave.init(config.arweave)
+	const signer = new InMemorySigner(creatorPrivateKey)
+	const address = await signer.publicKeyHash()
+
+	console.log("Signer initialized for originating address", address)
+	tezos.setSignerProvider(signer)
 
 	// const drivers = {
 	// 	arweave: new ArweaveDriver(config, queue, {
@@ -45,7 +58,7 @@ const main = async function() {
 
 	const handlers = {
 		// 'nft': await NftMultiassetHandler(tezos, config.nftContract),
-		'nft-asset': await NftAssetHandler(tezos, config.nftContract),
+		'nft-asset': await NftAssetHandler(tezos, contractId),
 		'tez': await TezHandler(tezos),
 	}
 
